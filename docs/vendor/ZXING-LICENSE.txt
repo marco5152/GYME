@@ -1,0 +1,3 @@
+vendor/zxing.min.js je knižnica @zxing/library 0.21.3 (https://github.com/zxing-js/library),
+distribuovaná pod licenciou Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+Používa sa len na skenovanie čiarových kódov kamerou.

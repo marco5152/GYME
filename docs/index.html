@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="sk" data-theme="dark" data-pal="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1013">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tabuľky">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+<title>Kalorické tabuľky</title>
+<script>
+  // Téma sa nastaví hneď, aby pri štarte nebliklo zlé pozadie. Jednoduchý ES5 kód funguje aj v starých prehliadačoch.
+  (function () {
+    try {
+      var pref = localStorage.getItem("theme") || "auto", pal = localStorage.getItem("pal") || "blue";
+      var light = pref === "light" || (pref === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+      document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
+      document.documentElement.setAttribute("data-pal", pal);
+    } catch (e) {}
+    var ok = !!(window.indexedDB && window.fetch && window.Promise && window.File && window.CSS && CSS.supports && CSS.supports("inset", "0"));
+    function problem() {
+      var d = document.getElementById("compat"); if (!d) return;
+      d.hidden = false;
+      d.textContent = ok ? "Appka sa nespustila. Zatvor ju a otvor znova. Ak to nepomôže, aktualizuj iOS (potrebné je iOS 15 alebo novšie)."
+        : "Tento prehliadač je príliš starý. Appka potrebuje iOS 15 alebo novší (Safari 15+).";
+    }
+    window.addEventListener("DOMContentLoaded", function () {
+      if (!ok) problem(); else setTimeout(function () { if (!window.__appStarted) problem(); }, 4000);
+    });
+  })();
+</script>
+</head>
+<body>
+<div id="compat" hidden></div>
+<div id="app">
+  <header id="head"></header>
+  <main id="view"></main>
+  <button class="fab" data-act="add" aria-label="Pridať jedlo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    Pridať
+  </button>
+  <nav id="nav"></nav>
+  <div id="toast"></div>
+  <input type="file" accept="image/*" capture="environment" id="ai-cam" hidden>
+  <input type="file" accept="image/*" id="ai-gal" hidden>
+  <div id="sheetwrap"><div class="backdrop" data-act="close"></div><div class="sheet"><div class="grab"></div><div id="sheetbody"></div></div></div>
+  <div id="scanner" hidden>
+    <video id="scan-video" playsinline muted autoplay></video>
+    <div class="scan-frame"></div>
+    <div id="scan-status">Namier kameru na čiarový kód</div>
+    <button class="btn sec" data-act="scan-close">Zavrieť</button>
+  </div>
+</div>
+<script src="lib.js"></script>
+<script src="services.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
