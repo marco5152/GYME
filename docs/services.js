@@ -275,6 +275,26 @@ async function aiAnalyze({ text, imageDataUrl }) {
   return { items, dish, error: null };
 }
 
+const AI_SEARCH_PROMPT = (q) =>
+  `Používateľ hľadá v slovenskej nutričnej databáze potravinu alebo jedlo: „${q}“.\n` +
+  "Vráť 5 až 8 najbežnejších konkrétnych variantov, ktoré by mohol myslieť (napr. pre „pizza“: margherita, šunková, syrová; pre „jogurt“: biely, grécky, ovocný), s reálnymi nutričnými hodnotami. " +
+  "Ak ide o jednu jasnú potravinu, vráť aj jej bežné varianty prípravy (surové, varené, vyprážané). Neopakuj tú istú potravinu.\n" +
+  'Odpovedz VÝHRADNE jedným JSON objektom v tvare {"jedla": [{"nazov": "...", "gramy": 150, "kcal_100g": 0, "bielkoviny_100g": 0, "sacharidy_100g": 0, "tuky_100g": 0, "vlaknina_100g": 0, "cukry_100g": 0, "sol_100g": 0, "istota": 70}]}. ' +
+  "gramy = hmotnosť jednej bežnej porcie v gramoch, všetky _100g hodnoty sú na 100 g, istota = istota odhadu v percentách. Názvy píš po slovensky.";
+
+// Vyhľadá potraviny podľa názvu cez AI. Vráti {products, error} v tvare potravín pre zoznam.
+async function aiSearchFoods(query) {
+  const { content, error } = await aiChat([{ role: "system", content: AI_SYSTEM_PROMPT }, { role: "user", content: AI_SEARCH_PROMPT(query) }]);
+  if (error) return { products: [], error };
+  const { items } = parseAiJson(content);
+  if (!items.length) return { products: [], error: `AI nevrátila použiteľné potraviny. Odpoveď: ${content.slice(0, 200)}` };
+  for (const it of items) {
+    if (it.grams && it.grams !== 100) it.por = [[`1 porcia`, Math.round(it.grams)], ["100 g", 100]];
+    delete it.grams; delete it.conf;
+  }
+  return { products: items, error: null };
+}
+
 async function aiTest() {
   const { content, error } = await aiChat([{ role: "user", content: "Odpovedz len jedným slovom: OK" }], { json: false, maxTokens: 256, timeoutMs: 30000 });
   if (error) return { ok: false, text: error };

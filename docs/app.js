@@ -6,6 +6,7 @@ const ui = {
   tab: "today", prevTab: "today", date: todayIso(), anchor: todayIso(), more: false,
   q: "", cat: "Všetko", sort: "name", span: "week",
   off: { q: "", results: [], status: null, busy: false },
+  aif: { q: "", results: [], status: null, busy: false },
   ai: { file: null, preview: null, items: [], dish: "", status: null, busy: false, text: "" },
   pool: new Map(),   // dočasné potraviny (výsledky z Open Food Facts a AI) podľa id
 };
@@ -158,12 +159,21 @@ function foodList() {
   return (list.map(foodRow).join("") || `<div class="cnt">Nič sa nenašlo v tabuľkách.</div>`) + (list.length ? `<div class="cnt">${list.length} potravín</div>` : "");
 }
 
+function aiFoodBlock() {
+  const q = ui.q.trim();
+  if (!q) return "";
+  const o = ui.aif;
+  const btn = `<button class="btn sec" data-act="ai-food-search" ${o.busy ? "disabled" : ""}>✨ Nájsť „${esc(q)}“ pomocou AI</button>`;
+  const results = o.q === q ? o.results.map((f) => { ui.pool.set(f.id, f); return foodRow(f); }).join("") : "";
+  return `<h2><span>AI návrhy</span></h2>${btn}${o.q === q ? statusHtml(o.status) : ""}${results}`;
+}
+
 function offBlock() {
   const q = ui.q.trim();
   const o = ui.off;
   const btn = q ? `<button class="btn sec" data-act="off-search" ${o.busy ? "disabled" : ""}>${ICON.search.replace('width="20" height="20"', 'width="18" height="18" style="display:inline;vertical-align:-3px"')} Hľadať „${esc(q)}“ aj v Open Food Facts</button>` : "";
   const results = o.q === q ? o.results.map((f) => { ui.pool.set(f.id, f); return foodRow(f); }).join("") : "";
-  return `<h2><span>Balené výrobky</span></h2>${btn}${o.q === q ? statusHtml(o.status) : ""}${results}
+  return `${aiFoodBlock()}<h2><span>Balené výrobky</span></h2>${btn}${o.q === q ? statusHtml(o.status) : ""}${results}
     <div class="src-note">Údaje z Open Food Facts (ODbL), môžu obsahovať chyby · základné potraviny z USDA FoodData Central (CC0)</div>`;
 }
 
@@ -636,6 +646,8 @@ document.addEventListener("click", (ev) => {
   if ((el = d("[data-confirm]"))) {
     const c = openFood.ctx, g = c.grams();
     if (!(g > 0)) { toast("Zadaj množstvo"); return; }
+    // Potravina nájdená cez AI sa uloží, aby sa nabudúce našla aj ručným hľadaním
+    if (c.food.src === "ai" && !getFood(c.food.id)) state.custom.push({ ...c.food });
     const e = addEntry(c.food, g, ui.date);
     closeSheet(); render(); toast(`Pridané: ${c.food.n} (${fmt(g)} g)`, () => { removeEntry(e.id); render(); }); return;
   }
@@ -664,6 +676,14 @@ document.addEventListener("click", (ev) => {
       ui.off = { q, results: [], status: { cls: "warn", text: `Hľadám „${q}“ v Open Food Facts…` }, busy: true }; $("#offblock").innerHTML = offBlock();
       const { products, error, note } = await searchOpenFoodFacts(q);
       ui.off = { q, results: products, busy: false, status: error ? { cls: "err", text: error } : note ? { cls: "warn", text: note } : { cls: "ok", text: `Nájdené: ${products.length}` } };
+      if (ui.tab === "foods" && ui.q.trim() === q) $("#offblock").innerHTML = offBlock();
+    },
+    "ai-food-search": async () => {
+      const q = ui.q.trim(); if (!q || ui.aif.busy) return;
+      if (!state.ai.key) { openAi(); return; }
+      ui.aif = { q, results: [], status: { cls: "warn", text: `AI hľadá „${q}“…` }, busy: true }; $("#offblock").innerHTML = offBlock();
+      const { products, error } = await aiSearchFoods(q);
+      ui.aif = { q, results: products, busy: false, status: error ? { cls: "err", text: error } : { cls: "ok", text: `Návrhy od AI: ${products.length} (odhady, skontroluj hodnoty)` } };
       if (ui.tab === "foods" && ui.q.trim() === q) $("#offblock").innerHTML = offBlock();
     },
     "ai-run": runAi,
