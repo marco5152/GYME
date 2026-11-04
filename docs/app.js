@@ -500,7 +500,7 @@ function updateProfileResult() {
 }
 
 function readAiForm() {
-  return { key: $("#ai-key").value.trim(), model: $("#ai-model").value.trim() || "gemini-2.5-flash", imageSize: $("#ai-size").value };
+  return { key: $("#ai-key").value.trim(), model: $("#ai-model").value.trim() || DEFAULT_AI_MODEL, imageSize: $("#ai-size").value };
 }
 
 /* ===================== ZÁLOHA ===================== */

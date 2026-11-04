@@ -88,6 +88,8 @@ function ringState(value, target, dir) {
 
 /* ===================== ÚLOŽISKO (IndexedDB) ===================== */
 
+const DEFAULT_AI_MODEL = "gemini-3.5-flash";
+
 function defaultState() {
   return {
     version: 2, nextId: 1,
@@ -100,7 +102,7 @@ function defaultState() {
     goals: { kcal: 2200, p: 140, c: 250, f: 70 },
     profile: { sex: "muz", height_cm: 180, weight_kg: 80, age: 30, work: "sedava", sport: "ziadny", goal: "udrzat" },
     profileDone: false,
-    ai: { key: "", model: "gemini-2.5-flash", imageSize: "1024" },
+    ai: { key: "", model: DEFAULT_AI_MODEL, imageSize: "1024" },
     theme: "auto", pal: "blue", lastBackup: null,
   };
 }
@@ -111,6 +113,8 @@ function normalizeState(raw) {
   s.goals = Object.assign(base.goals, s.goals);
   s.profile = Object.assign(base.profile, s.profile);
   s.ai = Object.assign(base.ai, s.ai);
+  // Vyradené modely Gemini (1.x, 2.x) nahradíme aktuálnym
+  if (/^gemini-[12]\./.test(s.ai.model)) s.ai.model = DEFAULT_AI_MODEL;
   for (const k of ["meals", "acts", "favs", "custom", "recent"]) if (!Array.isArray(s[k])) s[k] = [];
   if (!s.weights || typeof s.weights !== "object") s.weights = {};
   // Staršie záznamy (z čias ručného výberu jedla) dostanú čas podľa pôvodného zaradenia

@@ -244,7 +244,7 @@ async function aiChat(messages, { json = true, maxTokens = 4096, timeoutMs = 900
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const body = { model: cfg.model || "gemini-2.5-flash", messages, temperature: 0.2, max_tokens: maxTokens };
+      const body = { model: cfg.model || DEFAULT_AI_MODEL, messages, temperature: 0.2, max_tokens: maxTokens };
       if (useJson) body.response_format = { type: "json_object" };
       const res = await fetch(endpoint, { method: "POST", headers, signal: ctrl.signal, body: JSON.stringify(body) });
       if (!res.ok) {

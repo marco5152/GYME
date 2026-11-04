@@ -1,4 +1,4 @@
-const CACHE = "tabulky-v2";
+const CACHE = "tabulky-v3";
 const ASSETS = [
   "./", "index.html", "style.css", "lib.js", "services.js", "app.js", "foods.json", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "vendor/zxing.min.js",
