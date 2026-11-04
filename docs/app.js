@@ -156,7 +156,7 @@ function foodList() {
   let list = searchFoods(ui.q).filter((f) => ui.cat === "Všetko" || (ui.cat === "Obľúbené" ? isFav(f.id) : ui.cat === "Moje" ? f.src === "custom" : f.cat === ui.cat));
   list.sort({ name: (a, b) => a.n.localeCompare(b.n, "sk"), kcal: (a, b) => b.k - a.k, protein: (a, b) => b.p - a.p }[ui.sort]);
   list.forEach((f) => ui.pool.set(f.id, f));
-  return (list.map(foodRow).join("") || `<div class="cnt">Nič sa nenašlo v tabuľkách.</div>`) + (list.length ? `<div class="cnt">${list.length} potravín</div>` : "");
+  return (list.map(foodRow).join("") || `<div class="cnt">Nič sa nenašlo v tabuľkách.${ui.q.trim() ? " Skús tlačidlo „Nájsť pomocou AI“ nižšie." : ""}</div>`) + (list.length ? `<div class="cnt">${list.length} potravín</div>` : "");
 }
 
 function aiFoodBlock() {
@@ -775,7 +775,11 @@ document.addEventListener("input", (ev) => {
 
 document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape") closeSheet();
-  if (ev.key === "Enter" && ev.target.id === "q") { ev.preventDefault(); ev.target.blur(); }
+  if (ev.key === "Enter" && ev.target.id === "q") {
+    ev.preventDefault(); ev.target.blur();
+    // Keď sa v tabuľkách nič nenašlo, Enter spustí hľadanie cez AI
+    if (state.ai.key && ui.q.trim() && !$("#flist .frow")) { const b = $('[data-act="ai-food-search"]'); if (b) b.click(); }
+  }
 });
 
 /* Pri písaní iOS zdvihne klávesnicu a spodná lišta by plávala nad ňou, preto ju skryjeme */
